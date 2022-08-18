@@ -48,12 +48,12 @@ gulp.task("build-sass", () => {
 
 gulp.task("copy-api", () => {
     return gulp.src("./app/api/**/*.*")
-    .pipe(gulp.dest(dist + "api"))
+    .pipe(gulp.dest(dist + "/api"))
 });
 
 gulp.task("copy-assets", () => {
     return gulp.src("./app/assets/**/*.*")
-    .pipe(gulp.dest(dist + "assets"))
+    .pipe(gulp.dest(dist + "/sassets"))
 });
 
 gulp.task("watch", () => {
