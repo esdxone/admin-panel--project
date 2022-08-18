@@ -1,23 +1,8 @@
-import $ from 'jquery';
+import React from 'react';
+import {createRoot} from 'react-dom/client';
+import AppEditor from './components/AppEditor';
 
-function getPageList() {
-    $("h1").remove();
-    $.get("./api", data => {
-        data.forEach(item => {
-            $("body").append(`<h1>${item}</h1>`);
-        })
-    }, "JSON");
-}
-
-getPageList();
-
-$(".js-create-page").click(function() {
-    $.post("./api/createNewPage.php", {
-        "name": $('.js-page-name').val()
-    }, () => {
-        getPageList();
-    })
-    .fail(() => {
-        alert("Страница уже существует!");
-    })
-})
+const root = createRoot(document.getElementById('root'));
+root.render(
+    <AppEditor/>
+);
