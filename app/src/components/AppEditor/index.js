@@ -20,7 +20,27 @@ const AppEditor = () => {
     const openPage = (page) => {
         setCurrentpage(`../${page}`);
         document.querySelector('iframe').load(currentPage, () => {
-            console.log('Страница загружена!')
+            const body = document.querySelector('iframe').contentDocument.body;
+            let textNodes = [];
+            function recNodes(element) {
+              element.childNodes.forEach(node => {
+                    if (node.nodeName === "#text" && node.nodeValue.replace(/\s+/g, "").length > 0) {
+                        textNodes.push(node);
+                    } else {
+                        recNodes(node);
+                    }
+                })
+            }
+
+            recNodes(body)
+
+            textNodes.forEach(node => {
+                const editWrapper =  document.querySelector('iframe').contentDocument.createElement('text-editor');
+
+                node.parentNode.replaceChild(editWrapper, node);
+                editWrapper.appendChild(node);
+                editWrapper.contentEditable = "true";
+            })
         })
     }
 
