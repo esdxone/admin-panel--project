@@ -1,14 +1,28 @@
+import '../../helpers/iframeLoader.js';
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 
 const AppEditor = () => {
     const [pageList, setPageList] = useState([]);
     const [pageName, setPageName] = useState("");
+    const [currentPage, setCurrentpage] = useState("index.html");
 
     useEffect(() => {
+       onInit(currentPage);
+    },[])
+
+    const onInit = (page) => {
+        openPage(page);
         loadPageList();
-    },[pageList])
+    }
+
+    const openPage = (page) => {
+        setCurrentpage(`../${page}`);
+        document.querySelector('iframe').load(currentPage, () => {
+            console.log('Страница загружена!')
+        })
+    }
 
     const loadPageList = () => {
         axios
@@ -30,22 +44,25 @@ const AppEditor = () => {
         .catch(() => alert("Такой страницы не существует!"))
     }
 
-    const pages = pageList.map(page => {
-        return (
-            <h1 key={page}>
-                {page}
-                <a href="#"
-                onClick={() => delePage(page)}>(x)</a>
-            </h1>
-        )
-    })
+
+
+    // const pages = pageList.map(page => {
+    //     return (
+    //         <h1 key={page}>
+    //             {page}
+    //             <a href="#"
+    //             onClick={() => delePage(page)}>(x)</a>
+    //         </h1>
+    //     )
+    // })
 
     return(
-        <>
-            <input onChange={(e) => setPageName(e.target.value)} value={pageName} type="text" />
-            <button onClick={createPage}>Создать страницу</button>
-            {pages}
-        </>
+        <iframe src={currentPage} frameBorder="0"></iframe>
+        // <>
+        //     <input onChange={(e) => setPageName(e.target.value)} value={pageName} type="text" />
+        //     <button onClick={createPage}>Создать страницу</button>
+        //     {pages}
+        // </>
     )
 }
 export default AppEditor;
