@@ -7,6 +7,7 @@ const AppEditor = () => {
     const [pageList, setPageList] = useState([]);
     const [pageName, setPageName] = useState("");
     const [currentPage, setCurrentpage] = useState("index.html");
+    let virtualDom;
 
     useEffect(() => {
        onInit(currentPage);
@@ -18,9 +19,28 @@ const AppEditor = () => {
     }
 
     const openPage = (page) => {
-        setCurrentpage(`../${page}`);
-        document.querySelector('iframe').load(currentPage, () => {
-            const body = document.querySelector('iframe').contentDocument.body;
+        const frame = document.querySelector('iframe');
+        setCurrentpage(`../${page}?rnd=${Math.random()} `);
+        axios
+            .get(`../${page}`)
+            .then(res => parseToDOM(res.data))
+            .then(wrapTextNode)
+            .then ((dom) => {
+                virtualDom = dom;
+                return dom})
+            .then(serializeDOMtoString)
+            .then(html => axios.post("./api/saveTemplatePage.php", {html}))
+            .then(() => frame.load('../temp.html'))
+            .then (() => enableEditing())
+    }
+
+    const parseToDOM = (str) => {
+        const parser = new DOMParser();
+        return parser.parseFromString(str, "text/html");
+    }
+
+    const wrapTextNode = (dom) => {
+        const body = dom.body;
             let textNodes = [];
             function recNodes(element) {
               element.childNodes.forEach(node => {
@@ -34,20 +54,43 @@ const AppEditor = () => {
 
             recNodes(body)
 
-            textNodes.forEach(node => {
-                const editWrapper =  document.querySelector('iframe').contentDocument.createElement('text-editor');
+        textNodes.forEach((node, i) => {
+            const editWrapper =  document.querySelector('iframe').contentDocument.createElement('text-editor');
 
-                node.parentNode.replaceChild(editWrapper, node);
-                editWrapper.appendChild(node);
-                editWrapper.contentEditable = "true";
-            })
+            node.parentNode.replaceChild(editWrapper, node);
+            editWrapper.appendChild(node);
+            editWrapper.setAttribute("node-id", i);
+            // editWrapper.contentEditable = "true";
         })
+
+        return dom;
+    }
+
+    const serializeDOMtoString = (dom) => {
+        const serialize = new XMLSerializer();
+        return serialize.serializeToString(dom);
     }
 
     const loadPageList = () => {
         axios
             .get("./api")
             .then(res => setPageList(res.data))
+    }
+
+    const enableEditing = () => {
+        document.querySelector('iframe').contentDocument.body.querySelectorAll("text-editor").forEach(item => {
+            item.contentEditable = "true";
+            item.addEventListener("input", () => {
+                onTextEdit(item);
+            })
+        })
+
+        console.log(virtualDom)
+    }
+
+    const onTextEdit = (element) => {
+        const id = element.getAttribute("node-id");
+        virtualDom.body.querySelector(`[node-id="${id}"]`).innerHTML = element.innerHTML;
     }
 
     const createPage = () => {
