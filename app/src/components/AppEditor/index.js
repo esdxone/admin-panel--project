@@ -7,6 +7,7 @@ const AppEditor = () => {
     const [pageList, setPageList] = useState([]);
     const [pageName, setPageName] = useState("");
     const [currentPage, setCurrentpage] = useState("index.html");
+    const [domStructure, setDomStructure] = useState("");
     let virtualDom;
 
     useEffect(() => {
@@ -20,13 +21,14 @@ const AppEditor = () => {
 
     const openPage = (page) => {
         const frame = document.querySelector('iframe');
-        setCurrentpage(`../${page}?rnd=${Math.random()} `);
+        setCurrentpage(page);
         axios
-            .get(`../${page}`)
+            .get(`../${currentPage}`)
             .then(res => parseToDOM(res.data))
             .then(wrapTextNode)
             .then ((dom) => {
                 virtualDom = dom;
+                setDomStructure(dom);
                 return dom})
             .then(serializeDOMtoString)
             .then(html => axios.post("./api/saveTemplatePage.php", {html}))
@@ -51,12 +53,10 @@ const AppEditor = () => {
                     }
                 })
             }
-
-            recNodes(body)
+        recNodes(body)
 
         textNodes.forEach((node, i) => {
             const editWrapper =  document.querySelector('iframe').contentDocument.createElement('text-editor');
-
             node.parentNode.replaceChild(editWrapper, node);
             editWrapper.appendChild(node);
             editWrapper.setAttribute("node-id", i);
@@ -88,9 +88,26 @@ const AppEditor = () => {
         console.log(virtualDom)
     }
 
+    const unwrapTextNodes = (dom) => {
+        dom.body.querySelectorAll("text-editor").forEach(element => {
+            element.parentNode.replaceChild(element.firstChild, element);
+        })
+    }
     const onTextEdit = (element) => {
         const id = element.getAttribute("node-id");
-        virtualDom.body.querySelector(`[node-id="${id}"]`).innerHTML = element.innerHTML;
+        const vDom = virtualDom;
+        vDom.body.querySelector(`[node-id="${id}"]`).innerHTML = element.innerHTML;
+        setDomStructure(vDom);
+    }
+
+    const savePage = () => {
+        console.log(domStructure)
+        const newDom = domStructure.cloneNode(domStructure);
+        unwrapTextNodes(newDom);
+        const html = serializeDOMtoString(newDom);
+        axios
+            .post("./api/savePage.php", {pageName: currentPage, html})
+            .then(res => console.log(res));
     }
 
     const createPage = () => {
@@ -100,13 +117,12 @@ const AppEditor = () => {
         .catch(() => alert("Страница уже существует!"));
     }
 
-    const delePage = (page) => {
+    const deletePage = (page) => {
        axios
         .post("./api/deletePage.php", {"name": page})
         .then(res => console.log(res))
         .catch(() => alert("Такой страницы не существует!"))
     }
-
 
 
     // const pages = pageList.map(page => {
@@ -118,9 +134,13 @@ const AppEditor = () => {
     //         </h1>
     //     )
     // })
-
     return(
+        <>
+        <button onClick={() => savePage()}>1sdfsa</button>
         <iframe src={currentPage} frameBorder="0"></iframe>
+
+        </>
+
         // <>
         //     <input onChange={(e) => setPageName(e.target.value)} value={pageName} type="text" />
         //     <button onClick={createPage}>Создать страницу</button>
