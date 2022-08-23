@@ -2,6 +2,7 @@ import '../../helpers/iframeLoader.js';
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { domHelpers } from '../../helpers/domHelpers.js';
+import { TextEditor } from '../TextEditor/index.js';
 
 
 const AppEditor = () => {
@@ -30,7 +31,6 @@ const AppEditor = () => {
             .then(wrapTextNode)
             .then ((dom) => {
                 virtualDom = dom;
-                setDomStructure(dom);
                 return dom})
             .then(serializeDOMtoString)
             .then(html => axios.post("./api/saveTemplatePage.php", {html}))
@@ -47,14 +47,13 @@ const AppEditor = () => {
     }
 
     const enableEditing = () => {
-        document.querySelector('iframe').contentDocument.body.querySelectorAll("text-editor").forEach(item => {
-            item.contentEditable = "true";
-            item.addEventListener("input", () => {
-                onTextEdit(item);
-            })
+        const mutationDOM = virtualDom;
+        document.querySelector('iframe').contentDocument.body.querySelectorAll("text-editor").forEach(element => {
+            const id = element.getAttribute("node-id"),
+            virtualElement = mutationDOM.body.querySelector(`[node-id="${id}"]`);
+            TextEditor(element, virtualElement);
         })
-
-        console.log(virtualDom)
+        setDomStructure(mutationDOM);
     }
 
     const injectStyle = () => {
@@ -75,12 +74,7 @@ const AppEditor = () => {
 
     }
 
-    const onTextEdit = (element) => {
-        const id = element.getAttribute("node-id");
-        const vDom = virtualDom;
-        vDom.body.querySelector(`[node-id="${id}"]`).innerHTML = element.innerHTML;
-        setDomStructure(vDom);
-    }
+
 
     const savePage = () => {
         console.log(domStructure)
