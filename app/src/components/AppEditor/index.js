@@ -1,12 +1,11 @@
 import '../../helpers/iframeLoader.js';
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
 import Alert from 'react-bootstrap/Alert';
+import ComfirmModal from '../ConfirmModal';
 import { domHelpers } from '../../helpers/domHelpers.js';
-import { TextEditor } from '../TextEditor/index.js';
-import LoadingSpinner from '../Spinner/index.js'
+import { TextEditor } from '../TextEditor';
+import LoadingSpinner from '../Spinner'
 
 
 const AppEditor = () => {
@@ -14,8 +13,8 @@ const AppEditor = () => {
     const [pageName, setPageName] = useState("");
     const [currentPage, setCurrentpage] = useState("index.html");
     const [domStructure, setDomStructure] = useState("");
-    const [showModal, setshowModal] = useState(false);
-    const [success, setSuccsess] = useState(false);
+    const [confirm, setConfirm] = useState(false);
+    const [success, setSuccess] = useState(false);
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(true);
     const {parseToDOM, wrapTextNode, serializeDOMtoString, unwrapTextNodes} = domHelpers();
@@ -92,10 +91,10 @@ const AppEditor = () => {
         const html = serializeDOMtoString(newDom);
         axios
             .post("./api/savePage.php", {pageName: currentPage, html})
-            .then(setshowModal(false))
+            .then(() => setConfirm(false))
+            .then(() => setLoading(false))
             .then(onSuccess)
             .catch(onError)
-            .then(setLoading(false))
     }
 
     const createPage = () => {
@@ -116,34 +115,25 @@ const AppEditor = () => {
         <>
         <LoadingSpinner active={loading}/>
         <div className="panel">
-            <button className='save-button' onClick={() => setshowModal(true)}>Опубликовать</button>
+            <button className='save-button' onClick={() => setshowModal(true)}>Открыть</button>
+            <button className='save-button' onClick={() => setConfirm(true)}>Опубликовать</button>
         </div>
 
         <iframe src={currentPage} frameBorder="0"></iframe>
 
-      <Modal show={showModal} onHide={() => setshowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Подтвердите действие</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>Вы уверены, что хотите сохранить изменения?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setshowModal(false)}>
-            Закрыть
-          </Button>
-          <Button variant="primary" onClick={() => savePage(() => setSuccess(true), () => setError(true))}>
-            Сохранить
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        <ComfirmModal
+        target={confirm}
+        method={() => savePage(() => setSuccess(true), () => setError(true))}
+        setModal={setConfirm}/>
 
-      <Alert show={success} variant="danger" onClose={() => setSuccess(false)} dismissible>
+      <Alert show={error} variant="danger" onClose={() => setError(false)} dismissible>
         <Alert.Heading>Упс, что-то пошло не так!</Alert.Heading>
         <p>
           Обновите страницу и попробуйте еще раз
         </p>
       </Alert>
 
-        <Alert show={error} variant="success" onClose={() => setError(false)} dismissible>
+        <Alert show={success} variant="success" onClose={() => setSuccess(false)} dismissible>
             <Alert.Heading>Страница успешно опубликована</Alert.Heading>
         </Alert>
 
