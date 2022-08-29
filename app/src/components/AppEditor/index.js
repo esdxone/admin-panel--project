@@ -1,8 +1,12 @@
 import '../../helpers/iframeLoader.js';
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import Alert from 'react-bootstrap/Alert';
 import { domHelpers } from '../../helpers/domHelpers.js';
 import { TextEditor } from '../TextEditor/index.js';
+import LoadingSpinner from '../Spinner/index.js'
 
 
 const AppEditor = () => {
@@ -10,6 +14,10 @@ const AppEditor = () => {
     const [pageName, setPageName] = useState("");
     const [currentPage, setCurrentpage] = useState("index.html");
     const [domStructure, setDomStructure] = useState("");
+    const [showModal, setshowModal] = useState(false);
+    const [success, setSuccsess] = useState(false);
+    const [error, setError] = useState(false);
+    const [loading, setLoading] = useState(true);
     const {parseToDOM, wrapTextNode, serializeDOMtoString, unwrapTextNodes} = domHelpers();
     let virtualDom;
 
@@ -37,6 +45,7 @@ const AppEditor = () => {
             .then(() => frame.load('../temp.html'))
             .then(() => enableEditing())
             .then(() => injectStyle())
+            .then(setLoading(false))
     }
 
 
@@ -76,14 +85,17 @@ const AppEditor = () => {
 
 
 
-    const savePage = () => {
-        console.log(domStructure)
+    const savePage = (onSuccess, onError) => {
+        setLoading(true);
         const newDom = domStructure.cloneNode(domStructure);
         unwrapTextNodes(newDom);
         const html = serializeDOMtoString(newDom);
         axios
             .post("./api/savePage.php", {pageName: currentPage, html})
-            .then(res => console.log(res));
+            .then(setshowModal(false))
+            .then(onSuccess)
+            .catch(onError)
+            .then(setLoading(false))
     }
 
     const createPage = () => {
@@ -100,20 +112,40 @@ const AppEditor = () => {
         .catch(() => alert("Такой страницы не существует!"))
     }
 
-
-    // const pages = pageList.map(page => {
-    //     return (
-    //         <h1 key={page}>
-    //             {page}
-    //             <a href="#"
-    //             onClick={() => delePage(page)}>(x)</a>
-    //         </h1>
-    //     )
-    // })
     return(
         <>
-        <button onClick={() => savePage()}>1sdfsa</button>
+        <LoadingSpinner active={loading}/>
+        <div className="panel">
+            <button className='save-button' onClick={() => setshowModal(true)}>Опубликовать</button>
+        </div>
+
         <iframe src={currentPage} frameBorder="0"></iframe>
+
+      <Modal show={showModal} onHide={() => setshowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Подтвердите действие</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Вы уверены, что хотите сохранить изменения?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setshowModal(false)}>
+            Закрыть
+          </Button>
+          <Button variant="primary" onClick={() => savePage(() => setSuccess(true), () => setError(true))}>
+            Сохранить
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Alert show={success} variant="danger" onClose={() => setSuccess(false)} dismissible>
+        <Alert.Heading>Упс, что-то пошло не так!</Alert.Heading>
+        <p>
+          Обновите страницу и попробуйте еще раз
+        </p>
+      </Alert>
+
+        <Alert show={error} variant="success" onClose={() => setError(false)} dismissible>
+            <Alert.Heading>Страница успешно опубликована</Alert.Heading>
+        </Alert>
 
         </>
 

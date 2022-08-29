@@ -1,7 +1,9 @@
+@import "../../node_modules/bootstrap/scss/bootstrap.scss";
+
 * {
     box-sizing: border-box;
 }
-
+$panelHeight: 64px;
 h1 {
     color: red;
 }
@@ -9,7 +11,75 @@ h1 {
 iframe {
     position: absolute;
     left: 0;
-    top: 0;
+    top: $panelHeight;
     width: 100%;
-    height: 100vh;
+    height: calc(100vh - $panelHeight);
+}
+.panel {
+    position: fixed;
+    width: 100%;
+    height: 54px;
+    left: 0;
+    top: 0;
+    background: #1c3f79;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 30px;
+}
+
+.save-button {
+    background: transparent;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 2px;
+    cursor: pointer;
+    display: -webkit-inline-box;
+    display: -ms-inline-flexbox;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    height: 40px;
+    margin: 0;
+    padding: 5px 10px;
+    text-align: center;
+    text-transform: uppercase;
+    -webkit-transition: color 0.3s ease-out, background 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out, border-color 0.3s ease-out, -webkit-box-shadow 0.3s ease-out;
+    transition: color 0.3s ease-out, background 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out, border-color 0.3s ease-out, -webkit-box-shadow 0.3s ease-out;
+    -o-transition: color 0.3s ease-out, background 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+    transition: color 0.3s ease-out, background 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out;
+    transition: color 0.3s ease-out, background 0.3s ease-out, height 0.3s ease-out, opacity 0.3s ease-out, border-color 0.3s ease-out, box-shadow 0.3s ease-out, -webkit-box-shadow 0.3s ease-out;
+    width: 100%;
+    max-width: 200px;
+}
+.save-button:hover {
+    background: #fff;
+    color: #000;
+}
+
+.fixed-spinner {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba($color: #000000, $alpha: 0.4);
+    visibility: hidden;
+    opacity: 0;
+    transition: all .3s ease-out;
+    z-index: 100000;
+    &.active {
+        opacity: 1;
+        visibility: visible;
+    }
 }
